@@ -34,3 +34,4 @@
 
 ## Updates
 - 2026-05-02: Initial Build (light design) + Scroll-Frame-Animation (zwei Ringe verschränken sich, 50 Frames, Seedance 1-pro)
+- 2026-05-02: Scroll-Animation auf Canvas-Rendering umgestellt (statt img.src-Swap) — entfernt die doppelte drop-shadow-Filter-Re-Rasterisierung pro Frame, dadurch komplett smooth auf Laptop-iGPUs; Ambient-Schatten als statischer radial-gradient unter Canvas; Fallback auf Nachbar-Frames falls einer beim Scroll noch nicht decoded ist (kein Verschwinden mehr).

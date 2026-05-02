@@ -455,7 +455,9 @@ a{color:inherit;text-decoration:none}
     <h2 class="serif" style="font-size:clamp(36px,5vw,68px);max-width:760px;margin:18px auto 0;font-weight:300">Zwei Ringe.<br/>Eine <em style="font-style:italic;color:var(--accent-dark)">Geschichte.</em></h2>
   </div>
   <div class="scroll-anim__sticky">
-    <img class="scroll-anim__frame" src="assets/scroll/frames-clean/frame-001.webp" alt="Zwei goldene Trauringe, die sich beim Scrollen verschränken" decoding="async" />
+    <div class="scroll-anim__stage" role="img" aria-label="Zwei goldene Trauringe, die sich beim Scrollen verschränken">
+      <canvas class="scroll-anim__canvas"></canvas>
+    </div>
   </div>
   <div class="scroll-anim__spacer" aria-hidden="true"></div>
 </section>
@@ -465,8 +467,10 @@ a{color:inherit;text-decoration:none}
 .scroll-anim__intro h2,.scroll-anim__intro span{pointer-events:auto}
 .scroll-anim__spacer{height:240vh;pointer-events:none}
 .scroll-anim__sticky{position:sticky;top:0;height:100vh;display:grid;place-items:center;z-index:1}
-.scroll-anim__frame{max-width:min(72vw,720px);max-height:80vh;width:auto;height:auto;object-fit:contain;will-change:contents;filter:drop-shadow(0 28px 60px rgba(140,107,58,.22)) drop-shadow(0 6px 14px rgba(42,31,24,.12))}
-@media (max-width:768px){.scroll-anim__spacer{height:200vh}.scroll-anim__frame{max-width:84vw;max-height:70vh}.scroll-anim__intro{top:10vh}}
+.scroll-anim__stage{position:relative;width:min(72vw,720px);height:80vh;max-height:80vh}
+.scroll-anim__stage::before{content:"";position:absolute;left:50%;bottom:6%;transform:translateX(-50%);width:78%;height:42px;background:radial-gradient(closest-side,rgba(140,107,58,.28),rgba(42,31,24,.12) 55%,transparent 80%);filter:blur(14px);pointer-events:none;z-index:0}
+.scroll-anim__canvas{position:relative;z-index:1;display:block;width:100%;height:100%}
+@media (max-width:768px){.scroll-anim__spacer{height:200vh}.scroll-anim__stage{width:84vw;height:70vh}.scroll-anim__intro{top:10vh}}
 @media (prefers-reduced-motion:reduce){.scroll-anim__spacer{height:auto;min-height:60vh}}
 </style>
 <script>
@@ -476,22 +480,64 @@ a{color:inherit;text-decoration:none}
   const SRC = (i) => `assets/scroll/frames-clean/frame-${PAD(i+1)}.webp`;
   const section = document.getElementById('scroll-anim');
   if (!section) return;
-  const img = section.querySelector('.scroll-anim__frame');
-  for (let i = 0; i < FRAME_COUNT; i++) { const im = new Image(); im.src = SRC(i); }
-  let current = 0, raf = 0;
+  const canvas = section.querySelector('.scroll-anim__canvas');
+  if (!canvas || !canvas.getContext) return;
+  const ctx = canvas.getContext('2d', { alpha: true });
+  const frames = new Array(FRAME_COUNT);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let cw = 0, ch = 0, current = -1, ticking = false, firstReady = false;
+
+  function sizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    cw = Math.max(1, Math.round(rect.width));
+    ch = Math.max(1, Math.round(rect.height));
+    canvas.width = Math.round(cw * dpr);
+    canvas.height = Math.round(ch * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (current >= 0) draw(current); else if (firstReady) draw(0);
+  }
+  function draw(idx){
+    const im = frames[idx];
+    if (!im || !im.complete || im.naturalWidth === 0){
+      // fall back to nearest loaded frame so the canvas never goes blank mid-scroll
+      for (let off = 1; off < FRAME_COUNT; off++){
+        const a = frames[idx - off], b = frames[idx + off];
+        if (a && a.complete && a.naturalWidth) return draw(idx - off);
+        if (b && b.complete && b.naturalWidth) return draw(idx + off);
+      }
+      return;
+    }
+    ctx.clearRect(0, 0, cw, ch);
+    const r = Math.min(cw / im.naturalWidth, ch / im.naturalHeight);
+    const w = im.naturalWidth * r, h = im.naturalHeight * r;
+    ctx.drawImage(im, (cw - w) / 2, (ch - h) / 2, w, h);
+  }
   function update(){
     const rect = section.getBoundingClientRect();
     const total = section.offsetHeight - window.innerHeight;
     if (total <= 0) return;
     const progress = Math.min(1, Math.max(0, -rect.top / total));
     const idx = Math.min(FRAME_COUNT - 1, Math.floor(progress * FRAME_COUNT));
-    if (idx !== current){ current = idx; img.src = SRC(idx); }
+    if (idx !== current){ current = idx; draw(idx); }
   }
-  window.addEventListener('scroll', () => {
-    if (raf) return;
-    raf = requestAnimationFrame(() => { update(); raf = 0; });
-  }, { passive: true });
-  update();
+  function onScroll(){
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { update(); ticking = false; });
+  }
+  for (let i = 0; i < FRAME_COUNT; i++){
+    const im = new Image();
+    im.decoding = 'async';
+    im.src = SRC(i);
+    frames[i] = im;
+    im.addEventListener('load', () => {
+      if (i === 0 && !firstReady){ firstReady = true; sizeCanvas(); update(); }
+      else if (i === current) draw(i);
+    }, { once: true });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', () => { sizeCanvas(); update(); }, { passive: true });
+  sizeCanvas();
 })();
 </script>
 <!-- BUILDSCROLL:END -->
