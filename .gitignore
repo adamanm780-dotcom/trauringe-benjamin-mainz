@@ -1,0 +1,5 @@
+node_modules/
+*.log
+preview-*.jpg
+.DS_Store
+inspo/grid.jpg
