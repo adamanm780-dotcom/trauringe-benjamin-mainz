@@ -254,6 +254,73 @@ a{color:inherit;text-decoration:none}
 .footer a:hover{color:var(--accent);opacity:1}
 .footer__bottom{display:flex;justify-content:space-between;align-items:center;padding-top:30px;border-top:1px solid var(--bg-deep-soft);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-light);opacity:.5;flex-wrap:wrap;gap:14px}
 @media (max-width:768px){.footer__bottom{justify-content:center;text-align:center}}
+
+/* ========== MOBILE SWIPE CAROUSELS (Gallery + Testimonials) ========== */
+@media (max-width:768px){
+  /* Gallery: horizontal swipe statt stacked grid */
+  .gallery__grid{
+    display:flex;
+    grid-template-columns:none;
+    grid-auto-rows:initial;
+    gap:14px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    padding:4px 4vw 18px;
+    margin:0 -4vw;
+    scroll-padding-inline-start:4vw;
+  }
+  .gallery__grid::-webkit-scrollbar{display:none}
+  .gphoto,
+  .gphoto.g1,.gphoto.g2,.gphoto.g3,.gphoto.g4,.gphoto.g5,.gphoto.g6{
+    flex:0 0 82%;
+    grid-column:auto;
+    grid-row:auto;
+    aspect-ratio:4/5;
+    height:auto;
+    scroll-snap-align:start;
+  }
+  .gallery__head{margin-bottom:34px}
+
+  /* Testimonials: horizontal swipe statt stacked cards */
+  .tgrid{
+    display:flex;
+    grid-template-columns:none;
+    gap:16px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    padding:4px 4vw 18px;
+    margin:0 -4vw;
+    scroll-padding-inline-start:4vw;
+  }
+  .tgrid::-webkit-scrollbar{display:none}
+  .tcard{
+    flex:0 0 85%;
+    scroll-snap-align:start;
+    padding:36px 28px;
+  }
+  .testimonials__head{margin-bottom:34px}
+
+  /* dezenter Wisch-Hinweis */
+  .swipe-hint{
+    display:block;
+    text-align:center;
+    font-size:10px;
+    letter-spacing:.32em;
+    text-transform:uppercase;
+    color:var(--accent-dark);
+    margin-top:14px;
+    opacity:.7;
+  }
+  .swipe-hint::before{content:"←  ";color:var(--accent)}
+  .swipe-hint::after{content:"  →";color:var(--accent)}
+}
+@media (min-width:769px){.swipe-hint{display:none}}
 </style>
 </head>
 <body>
@@ -586,6 +653,7 @@ a{color:inherit;text-decoration:none}
       <div class="gphoto g5 reveal"><img src="assets/maps-03.webp" alt="Halsketten Vitrine" loading="lazy" /></div>
       <div class="gphoto g6 reveal"><img src="assets/maps-01.webp" alt="Filiale Außenansicht Benjamin" loading="lazy" /></div>
     </div>
+    <span class="swipe-hint">Wischen</span>
   </div>
 </section>
 
@@ -614,6 +682,7 @@ a{color:inherit;text-decoration:none}
         <div class="tcard__when">Google Bewertung</div>
       </div>
     </div>
+    <span class="swipe-hint">Wischen</span>
   </div>
 </section>
 
